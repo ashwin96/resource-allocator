@@ -1,5 +1,5 @@
 # creating a dictionary with the processor count for each server type
-cpuCount{
+cpuCount={
 	'large'  :1,
 	'xlarge' :2,
 	'2xlarge':4,
@@ -14,7 +14,7 @@ def get_costs(instances,hours,cpus,price):
 		return allocateCPU(instances,hours,cpus,price,0)
 	elif price == -1:
 		return allocateCPU(instances,hours,cpus,price,1)
-	else
+	else:
 		return allocateCPU(instances,hours,cpus,price,2)
 
 def allocateCPU(instances,hours,cpus,price,state):
@@ -32,10 +32,10 @@ def allocateCPU(instances,hours,cpus,price,state):
 		result.append(instanceDict)
 		return result;
 
-def CostCalculator(instance,instanceSet,cpus,price,li,finalList,start,state)
+def CostCalculator(instance,instanceSet,cpus,price,li,finalList,start,state):
 	variable = -1
 	if state in [0,1]:
-		variable = state == 0 ? price : cpus;
+		variable =  price if state == 0 else cpus
 		if variable == 0:
 			if len(finalList)==0:
 				finalList.append(li[:])
@@ -53,7 +53,7 @@ def CostCalculator(instance,instanceSet,cpus,price,li,finalList,start,state)
 		if len(finalList)>0:
 			break;
 		li.append(instanceSet[i])
-		if variable == 0
+		if variable == 0:
 			CostCalculator(instance,instanceSet,cpus,price-instance.get(instanceSet[i]),li,finalList,i,state)
 		elif variable == 1:
 			CostCalculator(instance,instanceSet,cpus-cpuCount.get(instanceSet[i]),price,li,finalList,i,state)
