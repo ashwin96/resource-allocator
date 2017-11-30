@@ -20,20 +20,20 @@ def get_costs(instances,hours,cpus,price):
 def allocateCPU(instances,hours,cpus,price,state):
 	result = []
 	for instance in instances:
-		instanceSet = sorted(instance.values(),reverse=True);
+		instanceSet = sorted(instances[instance],key=instances[instance].get,reverse=True);
 		finalList = []
-		CostCalculator(instance,instanceSet,price,[],finalList,0,state)
-		server_list,total_cost = getListData(finalList,hours);
+		CostCalculator(instances[instance],instanceSet,hours,cpus,price,[],finalList,0,state)
+		server_list,total_cost = getListData(instances[instance],finalList,hours);
 		instanceDict = {
 			"region":instance,
-			"total_cost":str("$"+total_cost),
+			"total_cost":str("$"+str(total_cost)),
 			"servers": server_list
 		}
 		result.append(instanceDict)
-		return result;
+	result.sort(key=lambda x:x['total_cost'])
+	return result
 
-def CostCalculator(instance,instanceSet,cpus,price,li,finalList,start,state):
-	variable = -1
+def CostCalculator(instance,instanceSet,hours,cpus,price,li,finalList,start,state):
 	if state in [0,1]:
 		variable =  price if state == 0 else cpus
 		if variable == 0:
@@ -43,7 +43,6 @@ def CostCalculator(instance,instanceSet,cpus,price,li,finalList,start,state):
 		if variable < 0:
 			return
 	else:
-		variable = 2
 		if cpus == 0 and price >= 0:
 			if len(finalList)==0:
 				finalList.append(li[:])
@@ -53,27 +52,47 @@ def CostCalculator(instance,instanceSet,cpus,price,li,finalList,start,state):
 		if len(finalList)>0:
 			break;
 		li.append(instanceSet[i])
-		if variable == 0:
-			CostCalculator(instance,instanceSet,cpus,price-instance.get(instanceSet[i]),li,finalList,i,state)
-		elif variable == 1:
-			CostCalculator(instance,instanceSet,cpus-cpuCount.get(instanceSet[i]),price,li,finalList,i,state)
+		if state == 0:
+			CostCalculator(instance,instanceSet,hours,cpus,price-hours*instance.get(instanceSet[i]),li,finalList,i,state)
+		elif state == 1:
+			CostCalculator(instance,instanceSet,hours,cpus-cpuCount.get(instanceSet[i]),price,li,finalList,i,state)
 		else:
-			CostCalculator(instance,instanceSet,cpus-cpuCount.get(instanceSet[i]),price-instance.get(instanceSet[i]),li,finalList,i,state)
+			CostCalculator(instance,instanceSet,hours,cpus-cpuCount.get(instanceSet[i]),price-hours*instance.get(instanceSet[i]),li,finalList,i,state)
+		li.pop()
 
 def getListData(instance,finalList,hours):
 		ServerDict = {}
 		serverList = []
 		total_cost = 0;
-		for element in finalList:
-			if element in ServerDict:
-				ServerDict[element] = 1
-			else:
-				ServerDict[element] += 1
-			total_cost += instance.get(element)
+		for mylist in finalList:
+			for element in mylist:
+				if element in ServerDict:
+					ServerDict[element] += 1
+				else:
+					ServerDict[element] = 1
+				total_cost += instance.get(element)
 		for key,value in ServerDict.items():
-			serverList.add(tuple(key,value))
-		return serverList,total_cost
+			serverList.append(tuple([key,value]))
+		return serverList,total_cost*hours
 
+myDict = {
+	"us-east":   {
+                   "large":   0.12,
+                   "xlarge":   0.23,
+                   "2xlarge":   0.45,                    
+                   "4xlarge":   0.774,                    
+                   "8xlarge":   1.4,
+                "10xlarge":   2.82
+                },
+    
+    "us-west":   {
+                   "large":   0.14,
+                   "2xlarge":   0.413,                    
+                   "4xlarge":   0.89,                    
+                   "8xlarge":   1.3,
+             }  
+}
+print(get_costs(myDict,24,-1,169.272))
 
 
 
